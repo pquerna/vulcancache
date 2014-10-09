@@ -23,7 +23,7 @@ import (
 
 type basicCache struct{}
 
-func newBasicCache() *basicCache {
+func newBasicCache(co *CacheOptions) *basicCache {
 	return &basicCache{}
 }
 

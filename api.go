@@ -83,14 +83,39 @@ type HttpCacher struct {
 	miss  Miss
 }
 
-func NewHttpCacher() *HttpCacher {
-	bc := newBasicCache()
+type CacheOptions struct {
+	Recv  Recv
+	Hash  Hash
+	Cache Cache
+	Miss  Miss
+	// TODO: other options
+}
+
+func NewHttpCacher(co *CacheOptions) *HttpCacher {
+	bc := newBasicCache(co)
+
 	cache := &HttpCacher{
 		recv:  bc,
 		hash:  bc,
 		cache: bc,
 		miss:  bc,
 	}
-	// figure out how to best do this: overrides interface{}
+
+	if co.Recv != nil {
+		cache.recv = co.Recv
+	}
+
+	if co.Hash != nil {
+		cache.hash = co.Hash
+	}
+
+	if co.Cache != nil {
+		cache.cache = co.Cache
+	}
+
+	if co.Miss != nil {
+		cache.miss = co.Miss
+	}
+
 	return cache
 }
