@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	MAX_BLOCK_SIZE = 2097100
+	MAX_BLOCK_SIZE = 4000000
 )
 
 type Value struct {
