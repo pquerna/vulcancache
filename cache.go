@@ -18,7 +18,7 @@
 package vulcancache
 
 import (
-	"github.com/mailgun/vulcan/request"
+	"github.com/mailgun/vulcand/Godeps/_workspace/src/github.com/mailgun/vulcan/request"
 )
 
 type basicCache struct{}

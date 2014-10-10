@@ -18,7 +18,10 @@
 package vulcancache
 
 import (
-	"github.com/mailgun/vulcan/request"
+	"github.com/mailgun/vulcand/Godeps/_workspace/src/github.com/mailgun/vulcan/request"
+
+	"errors"
+	"net/http"
 )
 
 type HashFunc func(v string)
@@ -118,4 +121,36 @@ func NewHttpCacher(co *CacheOptions) *HttpCacher {
 	}
 
 	return cache
+}
+
+func (hc *HttpCacher) lookup(r request.Request) (*http.Response, error) {
+	// TODO: hashme
+	return nil, nil
+}
+
+func (hc *HttpCacher) pass(r request.Request) (*http.Response, error) {
+	// TODO: pass
+	return nil, nil
+}
+
+func (hc *HttpCacher) reject(r request.Request) (*http.Response, error) {
+	// TODO: better reject
+	return nil, errors.New("rejected")
+}
+
+func (hc *HttpCacher) ProcessRequest(r request.Request) (*http.Response, error) {
+	recvCmd := hc.recv.Recv(r)
+	switch recvCmd {
+	case RECV_LOOKUP:
+		return hc.lookup(r)
+	case RECV_PASS:
+		return hc.pass(r)
+	case RECV_REJECT:
+		return hc.reject(r)
+	}
+	panic("not reached")
+}
+
+func (hc *HttpCacher) ProcessResponse(r request.Request, a request.Attempt) {
+
 }
