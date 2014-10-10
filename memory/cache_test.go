@@ -30,30 +30,32 @@ func TestCache(t *testing.T) {
 		return
 	}
 
-	v = c.Alloc(1024)
-	v.Key = "foo"
+	mine := c.Alloc(1024)
+	defer mine.Unref()
+	mine.Key = "foo"
 	for i := 0; i < 1024; i++ {
-		v.Data[0][i] = 'a'
+		mine.Data[0][i] = 'a'
 	}
-	c.Set(v)
+	c.Set(mine)
 
 	b := c.Get("foo")
+	defer b.Unref()
 
 	if b == nil {
 		t.Fatalf("missing key 'foo' in %v", c)
 		return
 	}
-	cmp := bytes.Compare(v.Data[0], b.Data[0])
+	cmp := bytes.Compare(mine.Data[0], b.Data[0])
 
 	if cmp != 0 {
 		t.Fatalf("buffers didn't compare: %v  %v != %v", cmp, v, b)
 	}
-	b.Unref()
 }
 
 func TestBig(t *testing.T) {
 	c := New()
 	v := c.Alloc((MAX_BLOCK_SIZE * 5) + 1)
+	defer v.Unref()
 
 	if len(v.Data) != 6 {
 		t.Fatalf("expected len=6, got len=%v", len(v.Data))
