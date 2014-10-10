@@ -18,6 +18,7 @@
 package memory
 
 import (
+	"bytes"
 	"testing"
 )
 
@@ -26,5 +27,38 @@ func TestCache(t *testing.T) {
 	v := c.Get("foobar")
 	if v != nil {
 		t.Fatalf("should't of found key foobar in %v", c)
+		return
+	}
+
+	v = c.Alloc(1024)
+	v.Key = "foo"
+	for i := 0; i < 1024; i++ {
+		v.Data[0][i] = 'a'
+	}
+	c.Set(v)
+
+	b := c.Get("foo")
+
+	if b == nil {
+		t.Fatalf("missing key 'foo' in %v", c)
+		return
+	}
+	cmp := bytes.Compare(v.Data[0], b.Data[0])
+
+	if cmp != 0 {
+		t.Fatalf("buffers didn't compare: %v  %v != %v", cmp, v, b)
+	}
+	b.Unref()
+}
+
+func TestBig(t *testing.T) {
+	c := New()
+	v := c.Alloc((MAX_BLOCK_SIZE * 5) + 1)
+
+	if len(v.Data) != 6 {
+		t.Fatalf("expected len=6, got len=%v", len(v.Data))
+	}
+	if len(v.Data[5]) != 1 {
+		t.Fatalf("expected block at offset 5 to be of length 1, got %v", len(v.Data[5]))
 	}
 }

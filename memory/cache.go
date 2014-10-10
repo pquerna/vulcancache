@@ -25,9 +25,13 @@ import (
 	"sync/atomic"
 )
 
+const (
+	MAX_BLOCK_SIZE = 2097100
+)
+
 type Value struct {
 	Key  string
-	Data []byte
+	Data [][]byte
 	ref  int32
 }
 
@@ -36,7 +40,10 @@ func (v *Value) Unref() {
 
 	c := atomic.LoadInt32(&v.ref)
 	if c == 0 {
-		bufs.GCache.Put(v.Data)
+		for i := 0; i < len(v.Data); i++ {
+			bufs.GCache.Put(v.Data[i])
+		}
+		v.Data = nil
 	}
 }
 
@@ -45,6 +52,8 @@ func (v *Value) Ref() {
 }
 
 type Cache struct {
+	// TODO: consider mmap.
+	// TODO: hash mutexes.
 	mtx  sync.Mutex
 	kv   map[string]*list.Element
 	list *list.List
@@ -64,9 +73,35 @@ func (c *Cache) unlink(elem *list.Element) {
 }
 
 func (c *Cache) Alloc(size int) *Value {
-	return &Value{
-		Data: bufs.GCache.Cget(size),
+	needed := (size / MAX_BLOCK_SIZE) + 1
+	extra := size % MAX_BLOCK_SIZE
+	d := make([][]byte, 0, needed)
+	var i int
+
+	for i = 0; i < needed-1; i++ {
+		d = append(d, bufs.GCache.Cget(MAX_BLOCK_SIZE))
 	}
+	d = append(d, bufs.GCache.Cget(extra))
+
+	v := &Value{
+		Data: d,
+	}
+	v.Ref()
+	return v
+}
+
+func (c *Cache) Delete(key string) bool {
+	c.mtx.Lock()
+	defer c.mtx.Unlock()
+
+	elem, ok := c.kv[key]
+
+	if ok {
+		c.unlink(elem)
+		return true
+	}
+
+	return false
 }
 
 func (c *Cache) Set(v *Value) {
