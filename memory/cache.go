@@ -63,6 +63,12 @@ func (c *Cache) unlink(elem *list.Element) {
 	v.Unref()
 }
 
+func (c *Cache) Alloc(size int) *Value {
+	return &Value{
+		Data: bufs.GCache.Cget(size),
+	}
+}
+
 func (c *Cache) Set(v *Value) {
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
